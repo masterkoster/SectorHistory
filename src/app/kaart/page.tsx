@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, Suspense } from 'react';
 import type maplibregl from 'maplibre-gl';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import MapView from '@/components/MapView';
 import EventPanel from '@/components/EventPanel';
 import { curatedEvents } from '@/data/curated-events';
@@ -11,25 +12,49 @@ import { TimePeriod, EventCategory, PERIOD_LABELS, CATEGORY_LABELS } from '@/lib
 const PERIODS: TimePeriod[] = ['all', 'ww1', 'ww2', 'coldwar', 'modern'];
 const CATEGORIES: EventCategory[] = ['bombing', 'battle', 'industry', 'logistics', 'civilian', 'resistance', 'political'];
 
-export default function MapPage() {
-  const [selectedEventId, setSelectedEventId] = useState<string | null>('rotterdam-1940');
+function MapContent() {
+  const searchParams = useSearchParams();
+  const initialEvent = searchParams.get('event');
+
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(initialEvent || 'rotterdam-1940');
+  const [activeRelatedEventId, setActiveRelatedEventId] = useState<string | null>(null);
   const [selectedPeriods, setSelectedPeriods] = useState<Set<TimePeriod>>(new Set(['all']));
   const [selectedCategories, setSelectedCategories] = useState<Set<EventCategory>>(new Set(CATEGORIES));
   const [searchQuery, setSearchQuery] = useState('');
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [mapInstance, setMapInstance] = useState<maplibregl.Map | null>(null);
 
-  // Filter events
+  // Compute related/sub-event IDs when a related event is active
+  const highlightedIds = useMemo(() => {
+    if (!activeRelatedEventId) return new Set<string>();
+
+    const ids = new Set<string>();
+
+    // Include all sub-events of the active related event
+    curatedEvents
+      .filter((e) => e.parentEventId === activeRelatedEventId)
+      .forEach((e) => ids.add(e.id));
+
+    // Include explicitly listed related events
+    const parent = curatedEvents.find((e) => e.id === activeRelatedEventId);
+    if (parent?.relatedEvents) {
+      parent.relatedEvents.forEach((rid) => ids.add(rid));
+    }
+
+    // Include the parent itself
+    ids.add(activeRelatedEventId);
+
+    return ids;
+  }, [activeRelatedEventId]);
+
+  // Filter + include related events when active
   const filteredEvents = useMemo(() => {
-    return curatedEvents.filter((event) => {
-      // Period filter
+    const base = curatedEvents.filter((event) => {
       const periodMatch = selectedPeriods.has('all') || event.period.some((p) => selectedPeriods.has(p));
       if (!periodMatch) return false;
 
-      // Category filter
-      if (!selectedCategories.has(event.category)) return false;
+      const categoryMatch = selectedCategories.has(event.category);
+      if (!categoryMatch) return false;
 
-      // Search filter
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const matchesLocation = event.locationName.toLowerCase().includes(q);
@@ -40,7 +65,16 @@ export default function MapPage() {
 
       return true;
     });
-  }, [selectedPeriods, selectedCategories, searchQuery]);
+
+    // If related events are active, also include sub-events even if they don't match filters
+    if (activeRelatedEventId) {
+      const relatedIds = highlightedIds;
+      const extraEvents = curatedEvents.filter((e) => relatedIds.has(e.id) && !base.find((b) => b.id === e.id));
+      return [...base, ...extraEvents];
+    }
+
+    return base;
+  }, [selectedPeriods, selectedCategories, searchQuery, activeRelatedEventId, highlightedIds]);
 
   const selectedEvent = useMemo(
     () => curatedEvents.find((e) => e.id === selectedEventId) ?? null,
@@ -51,16 +85,11 @@ export default function MapPage() {
   const togglePeriod = useCallback((period: TimePeriod) => {
     setSelectedPeriods((prev) => {
       const next = new Set(prev);
-      if (period === 'all') {
-        return new Set(['all']);
-      }
+      if (period === 'all') return new Set(['all']);
       next.delete('all');
-      if (next.has(period)) {
-        next.delete(period);
-        if (next.size === 0) return new Set(['all']);
-      } else {
-        next.add(period);
-      }
+      if (next.has(period)) next.delete(period);
+      else next.add(period);
+      if (next.size === 0) return new Set(['all']);
       return next;
     });
   }, []);
@@ -68,13 +97,21 @@ export default function MapPage() {
   const toggleCategory = useCallback((cat: EventCategory) => {
     setSelectedCategories((prev) => {
       const next = new Set(prev);
-      if (next.has(cat)) {
-        next.delete(cat);
-      } else {
-        next.add(cat);
-      }
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
       return next;
     });
+  }, []);
+
+  // Handle "Show related" from EventPanel
+  const handleShowRelated = useCallback((eventId: string) => {
+    setActiveRelatedEventId((prev) => (prev === eventId ? null : eventId));
+  }, []);
+
+  // Handle event selection — deactivate related mode if clicking normally
+  const handleEventSelect = useCallback((id: string | null) => {
+    setSelectedEventId(id);
+    // Don't clear related mode; user might still want to see related events
   }, []);
 
   // Near me
@@ -83,7 +120,6 @@ export default function MapPage() {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const loc: [number, number] = [pos.coords.longitude, pos.coords.latitude];
-          setUserLocation(loc);
           if (mapInstance) {
             mapInstance.flyTo({ center: loc, zoom: 12, duration: 1500 });
           }
@@ -96,12 +132,13 @@ export default function MapPage() {
 
   return (
     <div className="relative w-full h-full flex flex-col">
-      {/* Map fills everything */}
+      {/* Map */}
       <div className="absolute inset-0">
         <MapView
           events={filteredEvents}
           selectedEventId={selectedEventId}
-          onEventSelect={setSelectedEventId}
+          onEventSelect={handleEventSelect}
+          highlightedEventIds={highlightedIds}
           onMapReady={setMapInstance}
         />
       </div>
@@ -155,7 +192,6 @@ export default function MapPage() {
 
       {/* Filter row */}
       <div className="absolute top-[72px] left-4 right-4 z-10 flex items-center gap-2 flex-wrap">
-        {/* Period pills */}
         {PERIODS.map((period) => (
           <button
             key={period}
@@ -174,7 +210,6 @@ export default function MapPage() {
 
         <div className="w-px h-6 bg-white/[0.06]" />
 
-        {/* Category pills */}
         {CATEGORIES.map((cat) => (
           <button
             key={cat}
@@ -213,7 +248,7 @@ export default function MapPage() {
         </button>
       </div>
 
-      {/* Legend — desktop only */}
+      {/* Legend — desktop */}
       <div className="absolute bottom-20 left-4 z-10 glass rounded-xl px-3.5 py-3 hidden md:block">
         <div className="text-[10px] uppercase tracking-widest text-text-muted font-semibold mb-2">
           Legenda
@@ -237,7 +272,7 @@ export default function MapPage() {
         })}
       </div>
 
-      {/* Ko-fi floating button */}
+      {/* Ko-fi floating */}
       <a
         href="https://ko-fi.com/"
         target="_blank"
@@ -258,8 +293,40 @@ export default function MapPage() {
         </span>
       </div>
 
+      {/* Related mode indicator */}
+      {activeRelatedEventId && (
+        <div className="absolute top-[116px] left-1/2 -translate-x-1/2 z-10">
+          <button
+            onClick={() => setActiveRelatedEventId(null)}
+            className="glass rounded-full px-4 py-2 flex items-center gap-2 text-xs text-indigo-300 hover:bg-surface-hover transition-colors border border-indigo-500/20"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+            Gerelateerde locaties weergeven — klik om te verbergen
+          </button>
+        </div>
+      )}
+
       {/* Slide-in panel */}
-      <EventPanel event={selectedEvent} onClose={() => setSelectedEventId(null)} />
+      <EventPanel
+        event={selectedEvent}
+        onClose={() => setSelectedEventId(null)}
+        onShowRelated={handleShowRelated}
+        relatedActive={activeRelatedEventId === selectedEventId}
+      />
     </div>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full h-full bg-background flex items-center justify-center">
+        <div className="text-text-muted">Kaart laden...</div>
+      </div>
+    }>
+      <MapContent />
+    </Suspense>
   );
 }

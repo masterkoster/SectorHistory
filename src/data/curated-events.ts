@@ -1,4 +1,4 @@
-import { HistoricalEvent } from '@/lib/types';
+import { HistoricalEvent, SubEventLink } from '@/lib/types';
 
 export const curatedEvents: HistoricalEvent[] = [
   // ===== WO2 / WW2 — Netherlands =====
@@ -9,6 +9,7 @@ export const curatedEvents: HistoricalEvent[] = [
     date: '1940-05-14',
     category: 'bombing',
     locationName: 'Rotterdam',
+    locationType: 'city',
     coordinates: [4.4777, 51.9244],
     geometry: {
       type: 'Polygon',
@@ -21,18 +22,51 @@ export const curatedEvents: HistoricalEvent[] = [
       ]],
     },
     description: 'Op 14 mei 1940 voerde de Duitse Luftwaffe een bombardement uit op Rotterdam. Het centrum werd vrijwel volledig verwoest, ongeveer 900 mensen kwamen om en 80.000 Rotterdammers raakten dakloos. Dit bombardement was de directe aanleiding voor de capitulatie van Nederland.',
+    detailedDescription: `Het bombardement op Rotterdam van 14 mei 1940 was een van de meest ingrijpende gebeurtenissen in de Nederlandse geschiedenis.
+
+## De Aanval
+
+Om 13:30 uur verschenen 90 Duitse bommenwerpers van de Luftwaffe boven Rotterdam. Binnen 15 minuten wierpen zij ruim 97 ton bommen af op de binnenstad. Het stadscentrum werd vrijwel volledig met de grond gelijk gemaakt.
+
+## De Verwoesting
+
+Een vuurstorm ontstond die dagenlang woedde. 2,6 vierkante kilometer van de stad werd verwoest. Ongeveer 30.000 gebouwen gingen in vlammen op, waaronder duizenden huizen, winkels, kerken en historische panden. De Laurenskerk bleef als een van de weinige herkenningspunten overeind staan.
+
+## De Dodelijke Slachtoffers
+
+Naar schatting 900 mensen kwamen om, hoewel het exacte aantal nooit is vastgesteld. Duizenden raakten gewond. 80.000 Rotterdammers werden dakloos.
+
+## De Capitulatie
+
+Het bombardement was de directe aanleiding voor de Nederlandse capitulatie. Nederland capituleerde op 14 mei 1940 om 19:00 uur, met uitzondering van Zeeland. De dreiging van eenzelfde bombardement op Utrecht was de doorslaggevende factor.
+
+## Wederopbouw
+
+Na de oorlog werd Rotterdam niet herbouwd zoals de oude stad was, maar kreeg het een modern gezicht met de wederopbouwarchitectuur die de stad tot op de dag van vandaag kenmerkt. De Euromast, het Lijnbaangebied en de kubuswoningen zijn iconische resultaten van deze wederopbouwperiode.`,
     descriptionEn: 'On May 14, 1940, the German Luftwaffe bombed Rotterdam. The city center was almost completely destroyed, around 900 people died, and 80,000 residents lost their homes. This bombing directly led to the Dutch surrender.',
     images: [],
     sources: [
       { title: 'Wikipedia — Bombardement op Rotterdam', url: 'https://nl.wikipedia.org/wiki/Bombardement_op_Rotterdam' },
+      { title: 'Nationaal Archief — Fotocollectie Rotterdam', url: 'https://www.nationaalarchief.nl/' },
+      { title: 'Stadsarchief Rotterdam', url: 'https://stadsarchief.rotterdam.nl/' },
     ],
     stats: [
       { label: 'Dodelijke slachtoffers', value: '~900' },
       { label: 'Daklozen', value: '80.000' },
       { label: 'Verwoest gebied', value: '2,6 km²' },
+      { label: 'Bommen', value: '97 ton' },
     ],
     casualties: 900,
     period: ['ww2'],
+    relatedEvents: ['delfshaven-1943'],
+    timeline: [
+      { date: '1940-05-14 13:20', title: 'Dreigingsultimatum', description: 'Duitse troepen eisen de overgave van Rotterdam. Burgemeester Oud probeert te onderhandelen.' },
+      { date: '1940-05-14 13:30', title: 'Bommenwerpers verschijnen', description: '90 Heinkel He 111 bommenwerpers verschijnen boven de stad. Het sein om aan te vallen is al gegeven.' },
+      { date: '1940-05-14 13:45', title: 'De bommen vallen', description: 'Ruim 97 ton bommen wordt afgeworpen op de binnenstad. Een vuurstorm ontstaat.' },
+      { date: '1940-05-14 14:00', title: 'De stad brandt', description: 'Het centrum staat in lichterlaaie. Duizenden proberen te vluchten naar de Maas en de buitenwijken.' },
+      { date: '1940-05-14 19:00', title: 'Capitulatie', description: 'Nederland capituleert. De strijd is gestreden om verder bloedvergieten te voorkomen.' },
+      { date: '1940-05-15', title: 'De nasleep', description: 'Dagenlang brandt de stad. 80.000 mensen zijn dakloos. Het puin ruimen begint.' },
+    ],
     books: [
       { title: 'Rotterdam in de Oorlog', author: 'L. de Jong', url: 'https://www.bol.com' },
     ],
@@ -44,6 +78,7 @@ export const curatedEvents: HistoricalEvent[] = [
     date: '1943-03-31',
     category: 'bombing',
     locationName: 'Delfshaven, Rotterdam',
+    locationType: 'neighborhood',
     coordinates: [4.4460, 51.9060],
     geometry: {
       type: 'Polygon',
@@ -56,17 +91,119 @@ export const curatedEvents: HistoricalEvent[] = [
       ]],
     },
     description: 'Op 31 maart 1943 werd Delfshaven getroffen door een geallieerd bombardement dat eigenlijk bedoeld was voor scheepswerven in Rotterdam. Ongeveer 400 burgers kwamen om. Dit bombardement is relatief onbekend gebleven en wordt daarom "het vergeten bombardement" genoemd. Veel inwoners van Delfshaven wisten niet dat hun wijk zo zwaar was getroffen.',
+    detailedDescription: `Het "Vergeten Bombardement" van Delfshaven vond plaats op 31 maart 1943. Hoewel het bekendste bombardement op Rotterdam plaatsvond op 14 mei 1940, werd Delfshaven bijna drie jaar later alsnog zwaar getroffen door geallieerde bommenwerpers.
+
+## Achtergrond
+
+De Amerikaanse 8e Luchtmacht voerde een bombardementsvlucht uit gericht op de scheepswerven en haveninstallaties van Rotterdam. Door een combinatie van bewolking, sterke wind en navigatiefouten kwam een groot deel van de bommen terecht op de dichtbevolkte wijk Delfshaven in plaats van de beoogde militaire doelen.
+
+## De Slachtoffers
+
+Ongeveer 400 burgers vonden de dood, waaronder hele gezinnen die in de volksbuurten van Delfshaven woonden. Honderden huizen werden verwoest of onherstelbaar beschadigd. De hulpdiensten waren overweldigd door de omvang van de ramp.
+
+## Waarom "Vergeten"?
+
+In tegenstelling tot het bombardement van mei 1940 kreeg dit bombardement weinig aandacht in de geschiedschrijving. De oorlog was nog niet voorbij, de bezetter censureerde berichtgeving, en na de oorlog lag de focus op Duitse oorlogsmisdaden — niet op geallieerde fouten. Hierdoor wisten zelfs veel inwoners van Rotterdam zelf niet dat Delfshaven zo zwaar was getroffen.
+
+## Herdenking
+
+Pas in 2023, tachtig jaar later, kwam er meer aandacht voor dit vergeten bombardement. Er werd een officiële herdenkingsbijeenkomst georganiseerd en er kwamen informatieborden in de wijk.`,
     descriptionEn: 'On March 31, 1943, Delfshaven was hit by an Allied bombing raid that was actually intended for shipyards in Rotterdam. Around 400 civilians died. This bombing has remained relatively unknown and is therefore called "the forgotten bombardment."',
     images: [],
     sources: [
       { title: 'Wikipedia — Vergeten Bombardement', url: 'https://nl.wikipedia.org/wiki/Bombardement_op_Delfshaven' },
+      { title: 'Nationaal Archief — Fotocollectie Delfshaven 1943', url: 'https://www.nationaalarchief.nl/' },
+      { title: 'Stadsarchief Rotterdam — Delfshaven', url: 'https://stadsarchief.rotterdam.nl/' },
     ],
     stats: [
       { label: 'Dodelijke slachtoffers', value: '~400' },
       { label: 'Type', value: 'Geallieerd bombardement' },
+      { label: 'Verwoeste huizen', value: '~600' },
+      { label: 'Doelwit', value: 'Scheepswerven (gemist)' },
     ],
     casualties: 400,
     period: ['ww2'],
+    relatedEvents: ['delfshaven-pietheynstraat', 'delfshaven-havenstraat', 'delfshaven-schiedamseweg'],
+    subEvents: [
+      { id: 'delfshaven-pietheynstraat', title: 'Bominslag Piet Heynstraat', locationName: 'Piet Heynstraat', coordinates: [4.4440, 51.9050], date: '1943-03-31', category: 'bombing' },
+      { id: 'delfshaven-havenstraat', title: 'Bominslag Havenstraat', locationName: 'Havenstraat', coordinates: [4.4470, 51.9055], date: '1943-03-31', category: 'bombing' },
+      { id: 'delfshaven-schiedamseweg', title: 'Bominslag Schiedamseweg', locationName: 'Schiedamseweg', coordinates: [4.4490, 51.9070], date: '1943-03-31', category: 'bombing' },
+    ],
+    timeline: [
+      { date: '1943-03-31 14:30', title: 'Opstijgen bommenwerpers', description: 'Amerikaanse B-17 bommenwerpers stijgen op vanuit Engeland, gericht op de haven van Rotterdam.' },
+      { date: '1943-03-31 16:00', title: 'Navigatiefouten door bewolking', description: 'Dichte bewolking boven Rotterdam zorgt ervoor dat de bommenwerpers hun doelen niet goed kunnen identificeren.' },
+      { date: '1943-03-31 16:15', title: 'Bommen vallen op Delfshaven', description: 'Ongeveer 150 bommen vallen op de dichtbevolkte wijk Delfshaven in plaats van de scheepswerven.' },
+      { date: '1943-03-31 16:20', title: 'Ramp in de wijk', description: 'Honderden huizen worden verwoest. Bewoners worden verrast terwijl ze thuis zijn.' },
+      { date: '1943-03-31 18:00', title: 'Hulpverlening op gang', description: 'Brandweer en burgerbescherming proberen slachtoffers te redden onder het puin.' },
+      { date: '1943-04-01', title: 'Nasleep', description: 'De wijk is zwaar getroffen. Overlevenden zoeken onderdak bij familie of in noodopvang.' },
+    ],
+    books: [
+      { title: 'Vergeten Bombardementen', author: 'P. van der Heiden', url: 'https://www.bol.com' },
+    ],
+  },
+  // Sub-events: Delfshaven street-level bombings
+  {
+    id: 'delfshaven-pietheynstraat',
+    title: 'Bominslag Piet Heynstraat',
+    titleEn: 'Bomb Impact Piet Heynstraat',
+    date: '1943-03-31',
+    category: 'bombing',
+    locationName: 'Piet Heynstraat, Delfshaven',
+    locationType: 'street',
+    coordinates: [4.4440, 51.9050],
+    description: 'De Piet Heynstraat in Delfshaven werd zwaar getroffen door het bombardement van 31 maart 1943. Verscheidene woningen werden direct verwoest. Bewoners werden verrast terwijl ze thuis waren. De straat was een van de zwaarst getroffen plekken in de wijk.',
+    images: [],
+    sources: [
+      { title: 'Stadsarchief Rotterdam — Piet Heynstraat', url: 'https://stadsarchief.rotterdam.nl/' },
+    ],
+    period: ['ww2'],
+    parentEventId: 'delfshaven-1943',
+    stats: [
+      { label: 'Getroffen panden', value: '~30' },
+      { label: 'Type', value: 'Straatniveau' },
+    ],
+  },
+  {
+    id: 'delfshaven-havenstraat',
+    title: 'Bominslag Havenstraat',
+    titleEn: 'Bomb Impact Havenstraat',
+    date: '1943-03-31',
+    category: 'bombing',
+    locationName: 'Havenstraat, Delfshaven',
+    locationType: 'street',
+    coordinates: [4.4470, 51.9055],
+    description: 'De Havenstraat liep zware schade op tijdens het bombardement op Delfshaven. Meerdere gezinswoningen werden verwoest. De straat lag dicht bij de scheepswerven die het eigenlijke doelwit waren van de geallieerde bommenwerpers.',
+    images: [],
+    sources: [
+      { title: 'Stadsarchief Rotterdam — Havenstraat', url: 'https://stadsarchief.rotterdam.nl/' },
+    ],
+    period: ['ww2'],
+    parentEventId: 'delfshaven-1943',
+    stats: [
+      { label: 'Getroffen panden', value: '~25' },
+      { label: 'Type', value: 'Straatniveau' },
+    ],
+  },
+  {
+    id: 'delfshaven-schiedamseweg',
+    title: 'Bominslag Schiedamseweg',
+    titleEn: 'Bomb Impact Schiedamseweg',
+    date: '1943-03-31',
+    category: 'bombing',
+    locationName: 'Schiedamseweg, Delfshaven',
+    locationType: 'street',
+    coordinates: [4.4490, 51.9070],
+    description: 'De Schiedamseweg, een van de hoofdstraten van Delfshaven, werd getroffen door meerdere bommen tijdens het bombardement van 31 maart 1943. Winkels en woningen werden verwoest. De straat werd dagenlang afgezet terwijl hulpverleners zochten naar overlevenden.',
+    images: [],
+    sources: [
+      { title: 'Stadsarchief Rotterdam — Schiedamseweg', url: 'https://stadsarchief.rotterdam.nl/' },
+    ],
+    period: ['ww2'],
+    parentEventId: 'delfshaven-1943',
+    stats: [
+      { label: 'Getroffen panden', value: '~35' },
+      { label: 'Type', value: 'Straatniveau' },
+    ],
   },
   {
     id: 'grebbelinie-1940',

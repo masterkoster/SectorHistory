@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { HistoricalEvent, CATEGORY_COLORS } from '@/lib/types';
@@ -9,14 +9,20 @@ interface MapViewProps {
   events: HistoricalEvent[];
   selectedEventId: string | null;
   onEventSelect: (id: string | null) => void;
+  highlightedEventIds?: Set<string>;
   onMapReady?: (map: maplibregl.Map) => void;
 }
 
-export default function MapView({ events, selectedEventId, onEventSelect, onMapReady }: MapViewProps) {
+export default function MapView({
+  events,
+  selectedEventId,
+  onEventSelect,
+  highlightedEventIds,
+  onMapReady,
+}: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markersRef = useRef<Map<string, maplibregl.Marker>>(new Map());
-  const animFrameRef = useRef<number>(0);
   const [mapLoaded, setMapLoaded] = useState(false);
 
   // Initialize map
@@ -45,7 +51,7 @@ export default function MapView({ events, selectedEventId, onEventSelect, onMapR
           },
         ],
       },
-      center: [5.5, 52.1], // Netherlands center
+      center: [5.5, 52.1],
       zoom: 6.5,
       minZoom: 2,
       maxZoom: 18,
@@ -54,7 +60,6 @@ export default function MapView({ events, selectedEventId, onEventSelect, onMapR
       touchZoomRotate: true,
     });
 
-    // Navigation controls
     map.addControl(new maplibregl.NavigationControl({
       visualizePitch: false,
     }), 'bottom-right');
@@ -67,7 +72,6 @@ export default function MapView({ events, selectedEventId, onEventSelect, onMapR
     mapRef.current = map;
 
     return () => {
-      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       map.remove();
       mapRef.current = null;
     };
@@ -78,40 +82,74 @@ export default function MapView({ events, selectedEventId, onEventSelect, onMapR
     if (!mapRef.current || !mapLoaded) return;
     const map = mapRef.current;
 
-    // Clear existing markers
     markersRef.current.forEach((marker) => marker.remove());
     markersRef.current.clear();
 
-    // Remove old area layers
-    ['event-area-fill', 'event-area-line', 'event-glow'].forEach((id) => {
+    ['event-area-fill', 'event-area-line', 'event-glow',
+     'related-area-fill', 'related-area-line', 'related-glow'].forEach((id) => {
       if (map.getLayer(id)) map.removeLayer(id);
       if (map.getSource(id)) map.removeSource(id);
     });
 
+    // Track which events need to be fitted
+    let minLng = 180, maxLng = -180, minLat = 90, maxLat = -90;
+
     events.forEach((event) => {
       const color = CATEGORY_COLORS[event.category];
       const isSelected = event.id === selectedEventId;
+      const isHighlighted = highlightedEventIds?.has(event.id) && !isSelected;
 
-      // Create marker element
+      // Track bounds for zooming
+      if (isHighlighted || isSelected) {
+        const [lng, lat] = event.coordinates;
+        minLng = Math.min(minLng, lng);
+        maxLng = Math.max(maxLng, lng);
+        minLat = Math.min(minLat, lat);
+        maxLat = Math.max(maxLat, lat);
+      }
+
+      // Build marker element
       const el = document.createElement('div');
       el.className = 'relative cursor-pointer group';
 
       // Year label
       const yearLabel = document.createElement('span');
-      yearLabel.className = 'absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-semibold tracking-wide pointer-events-none';
-      yearLabel.style.color = isSelected ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.25)';
+      yearLabel.className = `absolute pointer-events-none font-semibold tracking-wide ${
+        isHighlighted ? '-top-4 text-[8px] opacity-50' : '-top-5 text-[10px]'
+      }`;
+      yearLabel.style.color = isSelected
+        ? 'rgba(255,255,255,0.8)'
+        : isHighlighted
+        ? 'rgba(255,255,255,0.4)'
+        : 'rgba(255,255,255,0.25)';
       yearLabel.textContent = event.date.slice(0, 4);
       el.appendChild(yearLabel);
 
+      // "Related" label for highlighted events
+      if (isHighlighted) {
+        const label = document.createElement('span');
+        label.className = 'absolute -bottom-4 left-1/2 -translate-x-1/2 text-[7px] font-medium uppercase tracking-wider pointer-events-none';
+        label.style.color = 'rgba(255,255,255,0.3)';
+        label.textContent = 'gerelateerd';
+        el.appendChild(label);
+      }
+
       // Dot
       const dot = document.createElement('div');
-      dot.className = `rounded-full border-2 transition-all duration-300 ${isSelected ? 'scale-[1.4]' : ''}`;
-      dot.style.width = isSelected ? '16px' : '12px';
-      dot.style.height = isSelected ? '16px' : '12px';
-      dot.style.background = color;
-      dot.style.borderColor = isSelected ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.25)';
+      const dotSize = isSelected ? 16 : isHighlighted ? 8 : 12;
+      dot.className = 'rounded-full border-2 transition-all duration-300';
+      dot.style.width = `${dotSize}px`;
+      dot.style.height = `${dotSize}px`;
+      dot.style.background = isHighlighted ? 'transparent' : color;
+      dot.style.borderColor = isSelected
+        ? 'rgba(255,255,255,0.7)'
+        : isHighlighted
+        ? `${color}80`
+        : 'rgba(255,255,255,0.25)';
       dot.style.boxShadow = isSelected
         ? `0 0 20px ${color}, 0 0 40px ${color}40`
+        : isHighlighted
+        ? `0 0 8px ${color}40`
         : '0 0 10px rgba(0,0,0,0.5)';
       el.appendChild(dot);
 
@@ -125,13 +163,15 @@ export default function MapView({ events, selectedEventId, onEventSelect, onMapR
         el.appendChild(ring);
       }
 
-      el.addEventListener('click', () => {
+      // Click handler
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
         onEventSelect(event.id === selectedEventId ? null : event.id);
       });
 
-      // Hover effect
+      // Hover
       el.addEventListener('mouseenter', () => {
-        dot.style.transform = 'scale(1.3)';
+        if (!isSelected) dot.style.transform = 'scale(1.3)';
       });
       el.addEventListener('mouseleave', () => {
         if (!isSelected) dot.style.transform = 'scale(1)';
@@ -143,14 +183,30 @@ export default function MapView({ events, selectedEventId, onEventSelect, onMapR
 
       markersRef.current.set(event.id, marker);
     });
-  }, [events, selectedEventId, mapLoaded, onEventSelect]);
+
+    // Zoom to fit highlighted/selected events
+    if (minLng !== 180 && maxLng !== -180) {
+      const padding = 0.02;
+      const bounds = [
+        [Math.max(minLng - padding, -180), Math.max(minLat - padding, -90)],
+        [Math.min(maxLng + padding, 180), Math.min(maxLat + padding, 90)],
+      ] as [[number, number], [number, number]];
+
+      map.fitBounds(bounds, {
+        padding: { top: 100, bottom: 100, left: 100, right: 100 },
+        maxZoom: 16,
+        duration: 1200,
+      });
+    }
+  }, [events, selectedEventId, highlightedEventIds, mapLoaded, onEventSelect]);
 
   // Draw area polygon for selected event
   useEffect(() => {
     if (!mapRef.current || !mapLoaded) return;
     const map = mapRef.current;
 
-    ['event-area-fill', 'event-area-line', 'event-glow'].forEach((id) => {
+    ['event-area-fill', 'event-area-line', 'event-glow',
+     'related-area-fill', 'related-area-line', 'related-glow'].forEach((id) => {
       if (map.getLayer(id)) map.removeLayer(id);
       if (map.getSource(id)) map.removeSource(id);
     });
@@ -178,7 +234,6 @@ export default function MapView({ events, selectedEventId, onEventSelect, onMapR
       },
     });
 
-    // Fill
     map.addSource('event-area-fill', {
       type: 'geojson',
       data: selectedEvent.geometry as GeoJSON.GeoJSON,
@@ -194,7 +249,6 @@ export default function MapView({ events, selectedEventId, onEventSelect, onMapR
       },
     });
 
-    // Glow border
     map.addSource('event-glow', {
       type: 'geojson',
       data: selectedEvent.geometry as GeoJSON.GeoJSON,
@@ -212,7 +266,6 @@ export default function MapView({ events, selectedEventId, onEventSelect, onMapR
       },
     });
 
-    // Fly to the event
     map.flyTo({
       center: selectedEvent.coordinates,
       zoom: Math.max(map.getZoom(), 11),

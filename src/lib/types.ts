@@ -9,6 +9,8 @@ export type EventCategory =
 
 export type TimePeriod = 'all' | 'ww1' | 'ww2' | 'coldwar' | 'modern';
 
+export type LocationType = 'city' | 'neighborhood' | 'street' | 'region' | 'country' | 'building';
+
 export interface EventSource {
   title: string;
   url: string;
@@ -19,6 +21,21 @@ export interface EventStat {
   value: string;
 }
 
+export interface SubEventLink {
+  id: string;
+  title: string;
+  locationName: string;
+  coordinates: [number, number];
+  date: string;
+  category: EventCategory;
+}
+
+export interface TimelineEntry {
+  date: string;
+  title: string;
+  description: string;
+}
+
 export interface HistoricalEvent {
   id: string;
   title: string;
@@ -27,9 +44,10 @@ export interface HistoricalEvent {
   endDate?: string;
   category: EventCategory;
   locationName: string;
-  coordinates: [number, number]; // [lng, lat]
+  coordinates: [number, number];
   geometry?: GeoJSON.Polygon;
   description: string;
+  detailedDescription?: string;
   descriptionEn?: string;
   images: string[];
   sources: EventSource[];
@@ -37,6 +55,11 @@ export interface HistoricalEvent {
   casualties?: number;
   period: TimePeriod[];
   books?: { title: string; author: string; url: string }[];
+  relatedEvents?: string[];
+  subEvents?: SubEventLink[];
+  timeline?: TimelineEntry[];
+  locationType?: LocationType;
+  parentEventId?: string;
 }
 
 export const CATEGORY_LABELS: Record<EventCategory, { nl: string; en: string }> = {
